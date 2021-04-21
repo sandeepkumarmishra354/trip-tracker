@@ -6,6 +6,7 @@ import { RootStoreProvider } from './common/RootStoreProvider';
 import { serviceStorage } from './service/service.storage';
 import ScreenOnboarding from './screen/onboarding/ScreenOnboarding';
 import { View } from 'react-native';
+import { API } from './service/api';
 
 type State = {
     TripTracker: any,
@@ -35,6 +36,8 @@ export default function App() {
 
     useEffect(() => {
         load();
+        // it's important to call this method here once
+        API.setupParseInstallation();
     }, []);
 
     const load = async () => {

@@ -11,6 +11,7 @@ import { snackbarRef } from './utils/snackbar';
 function TripTracker() {
     const { authenticated } = useRootStore().storeAuth;
     const primaryDark = "#F8F8FF";
+
     return (
         <NavigationContainer>
             <StatusBar

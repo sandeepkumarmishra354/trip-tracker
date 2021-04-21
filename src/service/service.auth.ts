@@ -5,6 +5,7 @@ import { serviceStorage } from './service.storage';
 import { Constants } from '../utils/constants';
 import { LoginManager, AccessToken } from "react-native-fbsdk";
 import { toaster } from '../utils/toaster';
+import { helperParse, IParseAuthOption } from './helper/helper.parse';
 
 //call this method before using any sign in method (google,facebook,phone)
 GoogleSignin.configure({
@@ -17,8 +18,17 @@ export class ServiceAuth {
 
     private phoneAuthConfirmation?: FirebaseAuthTypes.ConfirmationResult;
 
-    constructor(private api: API) {
-        //
+    constructor(private api: API) { }
+
+    private _getParseDetails = (user: FirebaseAuthTypes.User, method: LoginMethod): IParseAuthOption => {
+        return {
+            username: user.email ?? "",
+            email: user.email ?? "",
+            fullname: user.displayName ?? "",
+            method,
+            photo: user.photoURL ?? "",
+            token: user.uid,
+        };
     }
 
     private _loginWithGoogle = async () => {
@@ -28,6 +38,12 @@ export class ServiceAuth {
             const { user, idToken } = await GoogleSignin.signIn();
             const gc = auth.GoogleAuthProvider.credential(idToken, user.id);
             const data = await auth().signInWithCredential(gc);
+            const parseUser = await helperParse.checkAndSignup(this._getParseDetails(data.user, 'google'));
+            if (!parseUser) {
+                await GoogleSignin.revokeAccess();
+                await GoogleSignin.signOut();
+                throw new Error("parse server login/signup fail...");
+            }
             if (data.user) {
                 serviceStorage.setLoginVia('google')
                     .then(() => { })
@@ -55,6 +71,11 @@ export class ServiceAuth {
             }
             const fbc = auth.FacebookAuthProvider.credential(accessData.accessToken);
             const authData = await auth().signInWithCredential(fbc);
+            const parseUser = await helperParse.checkAndSignup(this._getParseDetails(authData.user, 'facebook'));
+            if (!parseUser) {
+                LoginManager.logOut();
+                throw new Error("parse server login/signup fail...");
+            }
             if (authData.user) {
                 serviceStorage.setLoginVia('facebook')
                     .then(() => { })
@@ -104,6 +125,11 @@ export class ServiceAuth {
                 const cc = await this.phoneAuthConfirmation.confirm(otp);
                 if (cc?.user) {
                     this.phoneAuthConfirmation = undefined;
+                    const parseUser = await helperParse.checkAndSignup(this._getParseDetails(cc.user, 'phone'));
+                    if (!parseUser) {
+                        await auth().signOut();
+                        throw new Error("parse server login/signup fail...");
+                    }
                     serviceStorage.setLoginVia('phone')
                         .then(() => { })
                         .catch(() => { });
@@ -131,11 +157,12 @@ export class ServiceAuth {
                     await GoogleSignin.signOut();
                 } else if (method === 'facebook') {
                     LoginManager.logOut();
-               }
-                await auth().signOut();
-                serviceStorage.setLoginVia('none')
-                    .then(() => { })
-                    .catch(() => { });
+                }
+                await Promise.all([
+                    auth().signOut(),
+                    helperParse.logout(),
+                    serviceStorage.setLoginVia('none')
+                ]);
                 return true;
             }
             throw new Error("something went wrong, try again.");

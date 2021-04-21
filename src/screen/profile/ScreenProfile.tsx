@@ -12,11 +12,11 @@ import { AppScreens, NavigationProps } from '../../navigation/navigation.types';
 import ProfileHeader from './ProfileHeader';
 import ProfileOption from './ProfileOption';
 
-interface Props extends NavigationProps<AppScreens.PROFILE> {
-    storeProfile: StoreProfile
+interface IActionProps {
+    openScreen(screen: AppScreens): void
 }
 
-const ActionMenu = React.memo(() => {
+const ActionMenu = React.memo((props: IActionProps) => {
     const [show, setShow] = useState(false);
 
     const showMenu = () => {
@@ -26,6 +26,7 @@ const ActionMenu = React.memo(() => {
         setShow(false);
     }
     const onEditPress = () => {
+        props.openScreen(AppScreens.PROFILE_EDIT);
         setShow(false);
     }
     const onHelpPress = () => {
@@ -49,16 +50,24 @@ const ActionMenu = React.memo(() => {
     );
 });
 
+interface Props extends NavigationProps<AppScreens.PROFILE> {
+    storeProfile: StoreProfile
+}
+
 const ScreenProfile = (props: Props) => {
 
     const { loggingOut, user, logout } = useRootStore().storeProfile;
     const navigation = props.navigation;
 
+    const openScreen = (screen: AppScreens) => {
+        navigation.navigate(screen);
+    }
+
     return (
         <ScreenContainer
             title="Profile"
             showBack={navigation.goBack}
-            actions={[<ActionMenu key="1" />]}>
+            actions={[<ActionMenu key="1" openScreen={openScreen} />]}>
             <ScrollView
                 style={{ width: '100%' }}>
                 <ProfileHeader

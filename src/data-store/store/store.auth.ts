@@ -1,6 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { LoginMethod, ServiceAuth } from "../../service/service.auth";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth"
+import Parse from 'parse/react-native';
 
 export const temp_image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToHZz86T468YiLLmo36PyW6uidU3glH48ZzbnKC3QdZt6A0lWu4aRYsb9-bI5GeESd9wg&usqp=CAU";
 
@@ -13,6 +14,7 @@ export class StoreAuth {
     public verifyingOtp = false;
     public loginVia: LoginMethod | 'none' = 'none';
     public user: FirebaseAuthTypes.User | null = null;
+    public parseUser: Parse.User | null = null;
 
     public get authenticating() {
         return this.loginVia !== 'none';
@@ -24,7 +26,8 @@ export class StoreAuth {
     constructor(private serviceAuth: ServiceAuth, private cleanup: () => void) {
         makeAutoObservable(this);
         this.user = auth().currentUser;
-        this.authenticated = !!this.user;
+        this.parseUser = Parse.User.current() ?? null;
+        this.authenticated = !!this.user && !!this.parseUser;
     }
 
     public setShowPhoneAuth = (show: boolean) => {

@@ -16,11 +16,13 @@ export enum AppScreens {
     HOME = 'home',
     GROUP_CHAT = 'group-chat',
     PROFILE = 'profile',
+    PROFILE_EDIT = 'profile-edit',
     CREATE_TRIP = "create-trip"
 }
 export type AppStackParams = {
     [AppScreens.HOME]: undefined,
     [AppScreens.PROFILE]: undefined,
+    [AppScreens.PROFILE_EDIT]: undefined,
     [AppScreens.CREATE_TRIP]: undefined,
     [AppScreens.GROUP_CHAT]: { title: string },
 }
