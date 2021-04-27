@@ -105,6 +105,7 @@ export class StoreAuth {
             if (success) {
                 this.authenticated = false;
                 this.user = null;
+                this.parseUser = null;
             }
         });
         if (success)
