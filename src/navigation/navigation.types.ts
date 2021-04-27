@@ -1,5 +1,8 @@
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { enableScreens } from 'react-native-screens';
+
+enableScreens(true);
 
 export enum AppAuthScreens {
     LOGIN = 'login',

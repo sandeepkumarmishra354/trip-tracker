@@ -6,8 +6,8 @@ import { Easing } from 'react-native-reanimated';
 import LineWithText from '../../common/LineWithText';
 import MyButton from '../../common/MyButton';
 import { useRootStore } from '../../common/RootStoreProvider';
+import { LoginMethod } from '../../data-type/type.data';
 import { AppAuthScreens, NavigationAuthProps } from '../../navigation/navigation.types';
-import { LoginMethod } from '../../service/service.auth';
 import { PhoneAuthView } from './PhoneAuthView';
 
 interface Props extends NavigationAuthProps<AppAuthScreens.LOGIN> {
@@ -39,7 +39,9 @@ function ScreenLogin(props: Props) {
         doLogin('phone');
     }
     function doLogin(method: LoginMethod) {
-        storeAuth.login(method);
+        storeAuth.login(method)
+            .then(() => { })
+            .catch(() => { });
     }
 
     return (
@@ -67,7 +69,7 @@ function ScreenLogin(props: Props) {
                     color='#db4a39'
                     borderRadius={4}
                     //elevation={1}
-                    style={{ width: '85%',marginBottom:16 }}
+                    style={{ width: '85%', marginBottom: 16 }}
                     icon="logo-google"
                     loading={loginVia === 'google'}
                     disabled={authenticating}

@@ -1,17 +1,20 @@
 import { useTheme } from '@react-navigation/native';
+import { observer } from 'mobx-react-lite';
 import React, { useState } from 'react'
 import { Image, View } from 'react-native';
 import { Subheading } from 'react-native-paper';
 import MyActionSheet from '../../common/MyActionSheet';
 import MyButton from '../../common/MyButton';
 import { MyTextInput } from '../../common/MyTextInput';
+import { useRootStore } from '../../common/RootStoreProvider';
 
 interface Props {
     onCreateTrip(): void
 }
 
-const HomeNoTrip = React.memo((props: Props) => {
+const HomeNoTrip = (props: Props) => {
 
+    const storeTrip = useRootStore().storeTrip;
     const actionSheet = React.createRef<MyActionSheet>();
     const [tripid, setTripid] = useState("");
     const { colors } = useTheme() as any;
@@ -23,14 +26,20 @@ const HomeNoTrip = React.memo((props: Props) => {
         actionSheet.current?.show();
     }
     const actionSheetJoin = () => {
-        actionSheet.current?.hide();
+        if (tripid) {
+            storeTrip.joinNewTrip(tripid)
+                .then(() => {
+                    actionSheet.current?.hide();
+                })
+                .catch(() => { })
+        }
     }
     const actionSheetTripIdChange = (text: string) => {
         setTripid(text);
     }
 
     return (
-        <View style={{ width: "100%", flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: "100%", flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
             <Image
                 style={{
                     width: "70%",
@@ -70,7 +79,7 @@ const HomeNoTrip = React.memo((props: Props) => {
                         ENTER TRIP ID TO JOIN
                         </Subheading>
                     <MyTextInput
-                        style={{width:'90%'}}
+                        style={{ width: '90%' }}
                         placeholder="Type here..."
                         value={tripid}
                         onChangeText={actionSheetTripIdChange} />
@@ -79,12 +88,14 @@ const HomeNoTrip = React.memo((props: Props) => {
                         borderRadius={2}
                         elevation={1}
                         label="join now"
+                        loading={storeTrip.joiningTrip}
+                        disabled={storeTrip.joiningTrip}
                         color={colors.accent}
                         onPress={actionSheetJoin} />
                 </View>
             </MyActionSheet>
         </View>
     );
-});
+};
 
-export default HomeNoTrip;
+export default observer(HomeNoTrip);

@@ -1,37 +1,29 @@
-import { observer } from 'mobx-react-lite';
-import React from 'react';
-import { TouchableNativeFeedback, View } from 'react-native';
-import { Avatar, FAB } from 'react-native-paper';
+import React, { useEffect } from 'react';
 import HomeNoTrip from './HomeNoTrip';
-import { useRootStore } from '../../common/RootStoreProvider';
 import ScreenContainer from '../../common/ScreenContainer'
 import { AppScreens, NavigationProps } from '../../navigation/navigation.types';
-import { temp_image } from '../../data-store/store/store.auth';
-
-const UserImage = observer(({ onPress }: { onPress(): void }) => {
-    const storeAuth = useRootStore().storeAuth;
-    return (
-        <TouchableNativeFeedback
-            onPress={onPress}>
-            <Avatar.Image
-                style={{
-                    backgroundColor: "#F8F8FF", marginRight: 15,
-                    borderWidth: 0.5, borderColor: '#ecf3f9'
-                }}
-                size={32}
-                source={{ uri: storeAuth.user?.photoURL ?? temp_image }} />
-        </TouchableNativeFeedback>
-    );
-});
+import { UserHeaderImage } from './UserHeaderImage';
+import { useRootStore } from '../../common/RootStoreProvider';
+import { Loading } from '../../common/Loading';
+import { HomeOngoingTrip } from './HomeOngoingTrip';
+import { observer } from 'mobx-react-lite';
+//import { FAB } from 'react-native-paper';
 
 const ScreenHome = (props: NavigationProps<AppScreens.HOME>) => {
 
+    const storeTrip = useRootStore().storeTrip;
     const navigation = props.navigation;
+
+    useEffect(() => {
+        storeTrip.checkForJoinedTrip()
+            .then(() => { })
+            .catch(() => { })
+    }, []);
 
     const onCreateTripPress = () => {
         navigation.navigate(AppScreens.CREATE_TRIP);
     }
-    const profilePress = () => {
+    const openProfile = () => {
         navigation.navigate(AppScreens.PROFILE);
     }
     const onFabPress = () => {
@@ -42,21 +34,20 @@ const ScreenHome = (props: NavigationProps<AppScreens.HOME>) => {
         <ScreenContainer
             title="Trip Tracker"
             elevation={1}
-            actions={[<UserImage key="1" onPress={profilePress} />]}>
-            <View
-                style={{
-                    flex: 1, width: '100%', justifyContent: 'center',
-                    alignItems: 'center', paddingHorizontal: 8
-                }}>
-                <HomeNoTrip onCreateTrip={onCreateTripPress} />
-            </View>
-            {/*<FAB
-                style={{ position: 'absolute', bottom: 16, right: 16 }}
-                icon="chatbubble-outline"
-                small={false}
-                onPress={onFabPress} />*/}
+            actions={[<UserHeaderImage key="1" onPress={openProfile} />]}>
+            {
+                storeTrip.checkingJoinedTrip
+                    ?
+                    <Loading />
+                    :
+                    storeTrip.hasOngoingTrip
+                        ?
+                        <HomeOngoingTrip onFabPress={onFabPress} />
+                        :
+                        <HomeNoTrip onCreateTrip={onCreateTripPress} />
+            }
         </ScreenContainer>
     );
 }
 
-export default ScreenHome;
+export default observer(ScreenHome);

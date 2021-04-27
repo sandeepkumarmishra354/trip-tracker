@@ -1,20 +1,18 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+//import { createStackNavigator } from '@react-navigation/stack';
 import ScreenHome from '../screen/home/ScreenHome';
 import ScreenGroupChat from '../screen/chat/ScreenChat';
 import ScreenProfile from '../screen/profile/ScreenProfile';
 import { AppScreens, AppStackParams } from './navigation.types';
 import ScreenCreateTrip from '../screen/trip/ScreenCreateTrip';
 import ScreenProfileEdit from '../screen/profile/ScreenProfileEdit';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 
-const AppStack = createStackNavigator<AppStackParams>();
+const AppStack = createNativeStackNavigator<AppStackParams>();
 
 export const AppNavigator = React.memo(() => (
     <AppStack.Navigator
-        headerMode='none'
-        /*screenOptions={{
-            ...TransitionPresets.SlideFromRightIOS
-        }}*/
+        screenOptions={{ headerShown: false }}
         initialRouteName={AppScreens.HOME}>
         <AppStack.Screen name={AppScreens.HOME} component={ScreenHome} />
         <AppStack.Screen name={AppScreens.PROFILE} component={ScreenProfile} />

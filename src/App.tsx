@@ -1,23 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Provider as PaperProvider } from 'react-native-paper';
+import { Provider as PaperProvider } from 'react-native-paper';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { AppTheme } from './utils/theme';
 import { RootStoreProvider } from './common/RootStoreProvider';
 import { serviceStorage } from './service/service.storage';
 import ScreenOnboarding from './screen/onboarding/ScreenOnboarding';
-import { View } from 'react-native';
 import { API } from './service/api';
+import { Loading } from './common/Loading';
 
 type State = {
     TripTracker: any,
     isFirstTime: boolean | null
 }
-
-const Loader = () => (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator />
-    </View>
-);
 
 const MyContainer = ({ children }: { children: React.ReactNode }) => (
     <PaperProvider
@@ -27,7 +21,7 @@ const MyContainer = ({ children }: { children: React.ReactNode }) => (
     </PaperProvider>
 );
 
-export default function App() {
+const App = () => {
 
     const [state, setState] = useState<State>({
         TripTracker: null,
@@ -37,7 +31,7 @@ export default function App() {
     useEffect(() => {
         load();
         // it's important to call this method here once
-        API.setupParseInstallation();
+       API.setupParseInstallation();
     }, []);
 
     const load = async () => {
@@ -58,7 +52,7 @@ export default function App() {
     const { TripTracker, isFirstTime } = state;
 
     if (isFirstTime === null)
-        return <Loader />;
+        return <Loading />;
 
     if (isFirstTime === true)
         return (
@@ -76,3 +70,5 @@ export default function App() {
     );
 
 };
+
+export default App;

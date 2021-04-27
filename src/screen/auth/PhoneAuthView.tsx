@@ -32,11 +32,15 @@ export const PhoneAuthView = observer((props: Props) => {
     }
     const onSendOtp = () => {
         if(phoneNumber.current)
-            sendOtp(phoneNumber.current);
+            sendOtp(phoneNumber.current)
+                .then(() => { })
+                .catch(() => { });
     }
     const onVerifyOtp = () => {
         if(otp.current)
-            verifyOtp(otp.current);
+            verifyOtp(otp.current)
+                .then(() => { })
+                .catch(() => { });
     }
     const onCancel = () => {
         setShowPhoneAuth(false);

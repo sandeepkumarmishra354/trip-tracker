@@ -15,27 +15,39 @@ interface Props extends NavigationProps<AppScreens.CREATE_TRIP> {
 }
 
 const ScreenCreateTrip = (props: Props) => {
+
     const storeTrip = useRootStore().storeTrip;
     const navigation = props.navigation;
     const [tripName, setTripName] = useState("");
     const [destination, setDestination] = useState("");
     const [members, setMembers] = useState("");
-    const [isCreated, setCreated] = useState(false);
+    const [description, setDescription] = useState("");
+    const [createdData, setCreatedData] = useState({ success: false, tripId: "" });
 
     const onCreatePress = async () => {
         if (tripName && destination && members) {
-            const success = await storeTrip.createTrip({
+            const result = await storeTrip.createTrip({
                 name: tripName,
-                destination,
-                members: Number(members)
+                destination, description,
+                maxMember: Number(members)
             });
-            setCreated(success);
+            if (result) {
+                setCreatedData({ success: true, tripId: result.tripId });
+            }
         } else {
             snackbar.show({
                 message: "please fill all details...",
                 type: 'error'
             });
         }
+    }
+
+    const onDialogDismiss = () => {
+        setCreatedData({ ...createdData, success: false });
+        storeTrip.checkForJoinedTrip()
+            .then(() => { })
+            .catch(() => { });
+        navigation.goBack();
     }
 
     return (
@@ -56,25 +68,31 @@ const ScreenCreateTrip = (props: Props) => {
 
                     <MyTextInput
                         style={styles.input}
-                        label="Trip name"
+                        label="Trip name *"
                         value={tripName}
                         onChangeText={setTripName}
                         disabled={storeTrip.creatingTrip} />
                     <MyTextInput
                         style={styles.input}
-                        label="Destination"
+                        label="Destination *"
                         value={destination}
                         onChangeText={setDestination}
                         disabled={storeTrip.creatingTrip} />
                     <MyTextInput
                         style={styles.input}
-                        label="Total member"
+                        label="Total member *"
                         type="number-pad"
                         value={members}
                         onChangeText={setMembers}
                         disabled={storeTrip.creatingTrip} />
+                    <MyTextInput
+                        style={styles.input}
+                        label="Description"
+                        value={description}
+                        onChangeText={setDescription}
+                        disabled={storeTrip.creatingTrip} />
                     <MyButton
-                        style={{ marginVertical: 22,marginHorizontal:42 }}
+                        style={{ marginVertical: 22, marginHorizontal: 42 }}
                         label="create trip"
                         borderRadius={3}
                         elevation={1}
@@ -84,11 +102,9 @@ const ScreenCreateTrip = (props: Props) => {
                 </View>
             </ScrollView>
             <DialogTripCreated
-                visible={isCreated}
-                onDismiss={() => {
-                    setCreated(false);
-                }}
-                tripId="AB123R4" />
+                visible={createdData.success}
+                onDismiss={onDialogDismiss}
+                tripId={createdData.tripId} />
         </ScreenContainer>
     );
 }

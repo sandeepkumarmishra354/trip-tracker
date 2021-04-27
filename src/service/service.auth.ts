@@ -5,14 +5,13 @@ import { serviceStorage } from './service.storage';
 import { Constants } from '../utils/constants';
 import { LoginManager, AccessToken } from "react-native-fbsdk";
 import { toaster } from '../utils/toaster';
-import { helperParse, IParseAuthOption } from './helper/helper.parse';
+import { helperParse } from './helper/helper.parse';
+import { IUserAuthData, LoginMethod } from '../data-type/type.data';
 
 //call this method before using any sign in method (google,facebook,phone)
 GoogleSignin.configure({
     webClientId: Constants.webClientId,
 });
-
-export type LoginMethod = 'google' | 'facebook' | 'phone';
 
 export class ServiceAuth {
 
@@ -20,15 +19,15 @@ export class ServiceAuth {
 
     constructor(private api: API) { }
 
-    private _getParseDetails = (user: FirebaseAuthTypes.User, method: LoginMethod): IParseAuthOption => {
-        return {
-            username: user.email ?? "",
-            email: user.email ?? "",
-            fullname: user.displayName ?? "",
+    private _getParseDetails = (user: FirebaseAuthTypes.User, method: LoginMethod): IUserAuthData => {
+        const data: IUserAuthData = {
+            username: (method === 'phone') ? user.phoneNumber : user.email,
+            email: user.email,
+            fullname: user.displayName,
             method,
-            photo: user.photoURL ?? "",
-            token: user.uid,
-        };
+            photo: user.photoURL
+        }
+        return data;
     }
 
     private _loginWithGoogle = async () => {
@@ -38,17 +37,16 @@ export class ServiceAuth {
             const { user, idToken } = await GoogleSignin.signIn();
             const gc = auth.GoogleAuthProvider.credential(idToken, user.id);
             const data = await auth().signInWithCredential(gc);
-            const parseUser = await helperParse.checkAndSignup(this._getParseDetails(data.user, 'google'));
+            const userData = this._getParseDetails(data.user, 'google');
+            const parseUser = await helperParse.checkAndSignup(userData);
             if (!parseUser) {
                 await GoogleSignin.revokeAccess();
                 await GoogleSignin.signOut();
                 throw new Error("parse server login/signup fail...");
             }
-            if (data.user) {
-                serviceStorage.setLoginVia('google')
-                    .then(() => { })
-                    .catch(() => { });
-            }
+            serviceStorage.setLoginVia('google')
+                .then(() => { })
+                .catch(() => { });
             return data.user;
         } catch (err) {
             console.error(err.message);
@@ -71,16 +69,15 @@ export class ServiceAuth {
             }
             const fbc = auth.FacebookAuthProvider.credential(accessData.accessToken);
             const authData = await auth().signInWithCredential(fbc);
-            const parseUser = await helperParse.checkAndSignup(this._getParseDetails(authData.user, 'facebook'));
+            const userData = this._getParseDetails(authData.user, 'facebook');
+            const parseUser = await helperParse.checkAndSignup(userData);
             if (!parseUser) {
                 LoginManager.logOut();
                 throw new Error("parse server login/signup fail...");
             }
-            if (authData.user) {
-                serviceStorage.setLoginVia('facebook')
-                    .then(() => { })
-                    .catch(() => { });
-            }
+            serviceStorage.setLoginVia('facebook')
+                .then(() => { })
+                .catch(() => { });
             return authData.user;
         } catch (err) {
             console.error(err.message);
@@ -124,8 +121,8 @@ export class ServiceAuth {
             if (this.phoneAuthConfirmation) {
                 const cc = await this.phoneAuthConfirmation.confirm(otp);
                 if (cc?.user) {
-                    this.phoneAuthConfirmation = undefined;
-                    const parseUser = await helperParse.checkAndSignup(this._getParseDetails(cc.user, 'phone'));
+                    const userData = this._getParseDetails(cc.user, 'phone');
+                    const parseUser = await helperParse.checkAndSignup(userData);
                     if (!parseUser) {
                         await auth().signOut();
                         throw new Error("parse server login/signup fail...");
@@ -133,6 +130,7 @@ export class ServiceAuth {
                     serviceStorage.setLoginVia('phone')
                         .then(() => { })
                         .catch(() => { });
+                    this.phoneAuthConfirmation = undefined;
                 }
                 return cc?.user ?? null;
             }
@@ -161,7 +159,8 @@ export class ServiceAuth {
                 await Promise.all([
                     auth().signOut(),
                     helperParse.logout(),
-                    serviceStorage.setLoginVia('none')
+                    serviceStorage.setLoginVia('none'),
+                    serviceStorage.removeUserProfile()
                 ]);
                 return true;
             }

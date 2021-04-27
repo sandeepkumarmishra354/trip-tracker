@@ -1,7 +1,8 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { LoginMethod, ServiceAuth } from "../../service/service.auth";
+import { ServiceAuth } from "../../service/service.auth";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth"
 import Parse from 'parse/react-native';
+import { LoginMethod } from "../../data-type/type.data";
 
 export const temp_image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToHZz86T468YiLLmo36PyW6uidU3glH48ZzbnKC3QdZt6A0lWu4aRYsb9-bI5GeESd9wg&usqp=CAU";
 
@@ -12,6 +13,7 @@ export class StoreAuth {
     public otpSent = false;
     public sendingOtp = false;
     public verifyingOtp = false;
+    public initiating = true;
     public loginVia: LoginMethod | 'none' = 'none';
     public user: FirebaseAuthTypes.User | null = null;
     public parseUser: Parse.User | null = null;
@@ -25,9 +27,20 @@ export class StoreAuth {
 
     constructor(private serviceAuth: ServiceAuth, private cleanup: () => void) {
         makeAutoObservable(this);
-        this.user = auth().currentUser;
-        this.parseUser = Parse.User.current() ?? null;
-        this.authenticated = !!this.user && !!this.parseUser;
+        this.init();
+    }
+
+    public init = async () => {
+        if(!this.user || !this.parseUser) {
+            const user = auth().currentUser;
+            const parseUser = await Parse.User.currentAsync();
+            runInAction(() => {
+                this.user = user;
+                this.parseUser = parseUser;
+                this.authenticated = !!this.user && !!this.parseUser;
+                this.initiating = false;
+            });
+        }
     }
 
     public setShowPhoneAuth = (show: boolean) => {

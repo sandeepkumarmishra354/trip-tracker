@@ -1,16 +1,14 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+//import { createStackNavigator } from '@react-navigation/stack';
 import ScreenLogin from '../screen/auth/ScreenLogin';
 import { AppAuthScreens, AppAuthStackParams } from './navigation.types';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 
-const AppAuthStack = createStackNavigator<AppAuthStackParams>();
+const AppAuthStack = createNativeStackNavigator<AppAuthStackParams>();
 
 export const AppStackNavigatorAuth = React.memo(() => (
     <AppAuthStack.Navigator
-        headerMode='none'
-        /*screenOptions={{
-            ...TransitionPresets.SlideFromRightIOS
-        }}*/>
+        screenOptions={{ headerShown: false }}>
         <AppAuthStack.Screen name={AppAuthScreens.LOGIN} component={ScreenLogin} />
     </AppAuthStack.Navigator>
 ));

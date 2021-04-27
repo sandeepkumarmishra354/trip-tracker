@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-community/async-storage';
-import { LoginMethod } from './service.auth';
+import { IUserProfile, LoginMethod } from '../data-type/type.data';
 
 class ServiceStorage {
 
     private readonly key_first_time = "first_time";
     private readonly key_login_via = "login_via";
+    private readonly key_profile = "user_profile";
 
     public isFirstTime = async () => {
         try {
@@ -43,6 +44,37 @@ class ServiceStorage {
             await AsyncStorage.setItem(this.key_first_time, 'opened');
             return true;
         } catch (err) {
+            console.error(err.message);
+            return false;
+        }
+    }
+
+    public saveUserProfile = async (profile: IUserProfile) => {
+        try {
+            await AsyncStorage.setItem(this.key_profile, JSON.stringify(profile));
+            return profile;
+        } catch (err) {
+            console.error(err.message);
+            return null;
+        }
+    }
+
+    public getUserProfile = async () => {
+        try {
+            const dataStr = await AsyncStorage.getItem(this.key_profile);
+            if (!dataStr) return null;
+            return JSON.parse(dataStr) as IUserProfile;
+        } catch (err) {
+            console.error(err.message);
+            return null;
+        }
+    }
+
+    public removeUserProfile = async () => {
+        try {
+            await AsyncStorage.removeItem(this.key_profile);
+            return true;
+        } catch(err) {
             console.error(err.message);
             return false;
         }
