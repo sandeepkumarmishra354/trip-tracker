@@ -4,8 +4,6 @@ import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth"
 import Parse from 'parse/react-native';
 import { LoginMethod } from "../../data-type/type.data";
 
-export const temp_image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToHZz86T468YiLLmo36PyW6uidU3glH48ZzbnKC3QdZt6A0lWu4aRYsb9-bI5GeESd9wg&usqp=CAU";
-
 export class StoreAuth {
     public authenticated = false;
     public loggingOut = false;
