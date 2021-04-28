@@ -1,11 +1,16 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { IJoinedTrip, ITripCreateData, ServiceTrip } from "../../service/service.trip";
+import { IJoinedTrip, ITripCreateData, ServiceTrip, TripStatus } from "../../service/service.trip";
 import { AppDataStore } from "../app.store";
 
 export class StoreTrip {
 
     private _creatingTrip = false;
     private _joiningTrip = false;
+    private _startingTrip = false;
+    private _finishingTrip = false;
+    private _cancellingingTrip = false;
+    private _updatingLocation = false;
+    private _gettingTrips = false;
     private _checkingJoinedTrip = true;
     private _joinedTrip: IJoinedTrip | null = null;
 
@@ -15,6 +20,11 @@ export class StoreTrip {
 
     public get creatingTrip() { return this._creatingTrip; }
     public get joiningTrip() { return this._joiningTrip; }
+    public get startingTrip() { return this._startingTrip; }
+    public get finishingTrip() { return this._finishingTrip; }
+    public get cancellingTrip() { return this._cancellingingTrip; }
+    public get gettingTrips() { return this._gettingTrips; }
+    public get updatingLocation() { return this._updatingLocation; }
     public get joinedTrip() { return this._joinedTrip; }
     public get checkingJoinedTrip() { return this._checkingJoinedTrip; }
     public get hasOngoingTrip() { return !this._checkingJoinedTrip && !!this._joinedTrip; }
@@ -48,7 +58,28 @@ export class StoreTrip {
         });
     }
 
+    public startTrip = async () => {
+        runInAction(() => { this._startingTrip = true });
+    }
+
+    public finishTrip = async () => {
+        runInAction(() => { this._finishingTrip = true });
+    }
+
+    public cancelTrip = async () => {
+        runInAction(() => { this._cancellingingTrip = true });
+    }
+
+    public updateCurrentLocation = async () => {
+        runInAction(() => { this._updatingLocation = true });
+    }
+
+    public getTrips = async (status: TripStatus) => {
+        runInAction(() => { this._gettingTrips = true });
+    }
+
+    // cancel any subscription.
     public doCleanup = () => {
-        //
+        this.serviceTrip.doCleanup();
     }
 }

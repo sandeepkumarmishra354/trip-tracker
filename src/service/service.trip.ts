@@ -32,7 +32,8 @@ export interface IJoinedTrip {
     tripHostName: string,
     tripHostEmail: string,
     joined: number,
-    remaining: number
+    remaining: number,
+    isHost: boolean
 }
 
 export class ServiceTrip {
@@ -90,15 +91,20 @@ export class ServiceTrip {
             if (!result) throw new Error("something went wrong.");
             return result;
         } catch (err) {
-            snackbar.show({
+            toaster.show({
                 message: err.message,
-                type: 'error'
+                gravity: 'CENTER'
             });
             return null;
         }
     }
 
     public getTrips = async (status: TripStatus) => {
+        //
+    }
+
+    // cancel any subscription.
+    public doCleanup = () => {
         //
     }
 }

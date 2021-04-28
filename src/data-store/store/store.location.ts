@@ -10,7 +10,8 @@ export class StoreLocation {
         makeAutoObservable(this);
     }
 
+    // cancel any subscription.
     public doCleanup = () => {
-        //
+        this.serviceLocation.doCleanup();
     }
 }

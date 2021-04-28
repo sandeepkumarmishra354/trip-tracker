@@ -55,7 +55,8 @@ export class StoreProfile {
         }
     }
 
+    // cancel any subscription.
     public doCleanup = () => {
-        //
+        this.serviceUser.doCleanup();
     }
 }

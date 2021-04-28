@@ -3,6 +3,7 @@ import { ServiceAuth } from "../../service/service.auth";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth"
 import Parse from 'parse/react-native';
 import { LoginMethod } from "../../data-type/type.data";
+import { IAppStore } from "../app.store";
 
 export class StoreAuth {
     public authenticated = false;
@@ -23,13 +24,13 @@ export class StoreAuth {
         return this.sendingOtp || this.verifyingOtp;
     }
 
-    constructor(private serviceAuth: ServiceAuth, private cleanup: () => void) {
+    constructor(private serviceAuth: ServiceAuth, private appStore: IAppStore) {
         makeAutoObservable(this);
         this.init();
     }
 
     public init = async () => {
-        if(!this.user || !this.parseUser) {
+        if (!this.user || !this.parseUser) {
             const user = auth().currentUser;
             const parseUser = await Parse.User.currentAsync();
             runInAction(() => {
@@ -107,6 +108,6 @@ export class StoreAuth {
             }
         });
         if (success)
-            this.cleanup();
+            this.appStore.doLogoutCleanup();
     }
 }
