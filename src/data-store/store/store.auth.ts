@@ -4,6 +4,7 @@ import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth"
 import Parse from 'parse/react-native';
 import { LoginMethod } from "../../data-type/type.data";
 import { IAppStore } from "../app.store";
+import { servicePubnub } from "../../service/service.pubnub";
 
 export class StoreAuth {
     public authenticated = false;
@@ -29,10 +30,17 @@ export class StoreAuth {
         this.init();
     }
 
+    public getEmail = () => this.parseUser?.getEmail() ?? "";
+
     public init = async () => {
         if (!this.user || !this.parseUser) {
             const user = auth().currentUser;
             const parseUser = await Parse.User.currentAsync();
+            if (user && parseUser) {
+                const email = parseUser.getEmail();
+                if (email)
+                    servicePubnub.init(email);
+            }
             runInAction(() => {
                 this.user = user;
                 this.parseUser = parseUser;
