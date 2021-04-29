@@ -78,6 +78,21 @@ export class StoreTrip {
         //
     }
 
+    private _subscribeToChannels = (tripId: string) => {
+        const channelJoined = PublisherChannel.tripJoined(tripId);
+        const channelCancelled = PublisherChannel.tripCancelled(tripId);
+        const channelFinished = PublisherChannel.tripFinished(tripId);
+        const channelStarted = PublisherChannel.tripStarted(tripId);
+        const un1 = servicePubnub.subscribe(channelJoined, this._onNewUserJoined);
+        const un2 = servicePubnub.subscribe(channelCancelled, this._onTripCancelled);
+        const un3 = servicePubnub.subscribe(channelFinished, this._onTripFinished);
+        const un4 = servicePubnub.subscribe(channelStarted, this._onTripStarted);
+        this._addUnsubscriber(un1);
+        this._addUnsubscriber(un2);
+        this._addUnsubscriber(un3);
+        this._addUnsubscriber(un4);
+    }
+
     public createTrip = async (data: ITripCreateData) => {
         runInAction(() => { this._creatingTrip = true; });
         const result = await this.serviceTrip.createTrip(data);
@@ -106,20 +121,8 @@ export class StoreTrip {
             this._joinedTrip = result;
         });
         // subscribe for trip listeners
-        if (result) {
-            const channelJoined = PublisherChannel.tripJoined(result.tripId);
-            const channelCancelled = PublisherChannel.tripCancelled(result.tripId);
-            const channelFinished = PublisherChannel.tripFinished(result.tripId);
-            const channelStarted = PublisherChannel.tripStarted(result.tripId);
-            const un1 = servicePubnub.subscribe(channelJoined, this._onNewUserJoined);
-            const un2 = servicePubnub.subscribe(channelCancelled, this._onTripCancelled);
-            const un3 = servicePubnub.subscribe(channelFinished, this._onTripFinished);
-            const un4 = servicePubnub.subscribe(channelStarted, this._onTripStarted);
-            this._addUnsubscriber(un1);
-            this._addUnsubscriber(un2);
-            this._addUnsubscriber(un3);
-            this._addUnsubscriber(un4);
-        }
+        if (result)
+            this._subscribeToChannels(result.tripId);
     }
 
     public startTrip = async () => {
