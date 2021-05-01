@@ -27,7 +27,7 @@ const ScreenHome = (props: NavigationProps<AppScreens.HOME>) => {
         navigation.navigate(AppScreens.PROFILE);
     }
     const onFabPress = () => {
-        navigation.navigate(AppScreens.GROUP_CHAT, { title: 'Group chat' });
+        navigation.navigate(AppScreens.GROUP_CHAT);
     }
 
     return (

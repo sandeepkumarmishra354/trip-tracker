@@ -29,9 +29,6 @@ const ActionMenu = React.memo((props: IActionProps) => {
         props.openScreen(AppScreens.PROFILE_EDIT);
         setShow(false);
     }
-    const onHelpPress = () => {
-        setShow(false);
-    }
 
     return (
         <Menu
@@ -43,9 +40,6 @@ const ActionMenu = React.memo((props: IActionProps) => {
             <Menu.Item
                 title="Edit"
                 onPress={onEditPress} />
-            <Menu.Item
-                title="Help"
-                onPress={onHelpPress} />
         </Menu>
     );
 });
@@ -67,7 +61,7 @@ const ScreenProfile = (props: Props) => {
         <ScreenContainer
             title="Profile"
             showBack={navigation.goBack}
-            actions={[<ActionMenu key="1" openScreen={openScreen} />]}>
+            actions={storeProfile.profileData?.method === 'phone' ? [<ActionMenu key="1" openScreen={openScreen} />] : null}>
             {storeProfile.fetching
                 ? <Loading />
                 :

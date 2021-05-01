@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { MyTextInput } from '../../common/MyTextInput';
 import MyButton from '../../common/MyButton';
 import { useRootStore } from '../../common/RootStoreProvider';
+import { toaster } from '../../utils/toaster';
 
 interface Props {
     show: boolean
@@ -31,16 +32,32 @@ export const PhoneAuthView = observer((props: Props) => {
         otp.current = text;
     }
     const onSendOtp = () => {
-        if(phoneNumber.current)
-            sendOtp(phoneNumber.current)
-                .then(() => { })
-                .catch(() => { });
+        if (phoneNumber.current) {
+            if (phoneNumber.current.length === 10) {
+                sendOtp(phoneNumber.current)
+                    .then(() => { })
+                    .catch(() => { });
+            } else {
+                toaster.show({
+                    message: "phone number must be of 10 digit.",
+                    gravity: 'CENTER'
+                });
+            }
+        }
     }
     const onVerifyOtp = () => {
-        if(otp.current)
-            verifyOtp(otp.current)
-                .then(() => { })
-                .catch(() => { });
+        if (otp.current) {
+            if (otp.current.length === 6) {
+                verifyOtp(otp.current)
+                    .then(() => { })
+                    .catch(() => { });
+            } else {
+                toaster.show({
+                    message: "otp must be of 10 character long.",
+                    gravity: 'CENTER'
+                });
+            }
+        }
     }
     const onCancel = () => {
         setShowPhoneAuth(false);

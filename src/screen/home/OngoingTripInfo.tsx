@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { Caption, Headline, Subheading } from "react-native-paper";
 import MyButton from "../../common/MyButton";
 import { useRootStore } from "../../common/RootStoreProvider";
-import { IJoinedTrip } from "../../service/service.trip";
+import { IJoinedTrip, TripStatus } from "../../service/service.trip";
 
 interface Props {
     trip: IJoinedTrip,
@@ -47,21 +47,25 @@ export const OngoingTripInfo = observer((props: Props) => {
                 </Subheading>
             </View>
             {
-                props.trip.isHost
+                props.trip.status === TripStatus.PLANNED
                     ?
-                    <MyButton
-                        style={{ width: '70%', marginTop: 25 }}
-                        label="start trip"
-                        elevation={2}
-                        borderRadius={3}
-                        onPress={startTrip}
-                        loading={storeTrip.startingTrip}
-                        disabled={storeTrip.startingTrip} />
-                    :
-                    <Caption
-                        style={{ marginTop: 25, textAlign: 'center' }}>
-                        Waiting for host to start the trip...
+                    props.trip.isHost
+                        ?
+                        <MyButton
+                            style={{ width: '70%', marginTop: 25 }}
+                            label="start trip"
+                            elevation={2}
+                            borderRadius={3}
+                            onPress={startTrip}
+                            loading={storeTrip.startingTrip}
+                            disabled={storeTrip.startingTrip} />
+                        :
+                        <Caption
+                            style={{ marginTop: 25, textAlign: 'center' }}>
+                            Waiting for host to start the trip...
                 </Caption>
+                    :
+                    null
             }
         </View>
     );

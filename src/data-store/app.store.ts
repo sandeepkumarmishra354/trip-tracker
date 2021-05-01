@@ -2,6 +2,7 @@ import { API } from "../service/api";
 import { ServiceAuth } from "../service/service.auth";
 import { ServiceLocation } from "../service/service.location";
 import { ServiceMessage } from "../service/service.message";
+import { ServicePubnub } from "../service/service.pubnub";
 import { ServiceTracker } from "../service/service.tracker";
 import { ServiceTrip } from "../service/service.trip";
 import { ServiceUser } from "../service/service.user";
@@ -13,7 +14,8 @@ import { StoreProfile } from "./store/store.profile";
 import { StoreTrip } from "./store/store.trip";
 
 export interface IAppStore {
-    doLogoutCleanup(): void
+    doLogoutCleanup(): void,
+    servicePubnub: ServicePubnub
 }
 
 export class AppDataStore implements IAppStore {
@@ -23,6 +25,7 @@ export class AppDataStore implements IAppStore {
     private _storeTrip: StoreTrip | null = null;
     private _storeMessage: StoreMessage | null = null;
     private _storeLocation: StoreLocation | null = null;
+    private _servicePubnub: ServicePubnub | null = null;
 
     public get storeAuth() {
         if (!this._storeAuth)
@@ -54,17 +57,31 @@ export class AppDataStore implements IAppStore {
             this._storeMessage = new StoreMessage(this, new ServiceMessage(API.getInstance()));
         return this._storeMessage;
     }
+    public get servicePubnub() {
+        if (!this._servicePubnub)
+            this._servicePubnub = new ServicePubnub();
+        return this._servicePubnub;
+    }
+
+    // call this method when there is no ongoing trip
+    public noTripNow = () => {
+        this._storeLocation?.doCleanup();
+        this._storeMessage?.doCleanup();
+        this._servicePubnub?.doCleanup();
+        this._storeLocation = null;
+        this._storeMessage = null;
+        this._servicePubnub = null;
+    }
 
     // Call this method "Only After Successfull Logout".
     // Do not set undefined || null to _storeAuth & don't perform any clean-up on that also.
     public doLogoutCleanup = () => {
         try {
             // perform clean-up task for each store.
+            this.noTripNow();
             this._storeHome?.doCleanup();
             this._storeProfile?.doCleanup();
             this._storeTrip?.doCleanup();
-            this._storeLocation?.doCleanup();
-            this._storeMessage?.doCleanup();
         } catch (err) {
             console.error(`after logout cleanup error: ${err.message}`);
         } finally {
@@ -72,8 +89,6 @@ export class AppDataStore implements IAppStore {
             this._storeHome = null;
             this._storeProfile = null;
             this._storeTrip = null;
-            this._storeLocation = null;
-            this._storeMessage = null;
         }
     }
 }

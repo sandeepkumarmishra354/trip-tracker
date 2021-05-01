@@ -1,5 +1,12 @@
-import RNLocation, { LocationPermissionStatus, Subscription, Location } from 'react-native-location';
+import RNLocation, { Subscription, Location } from 'react-native-location';
 import { API } from "./api";
+import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
+import { snackbar } from '../utils/snackbar';
+import Parse from 'parse/react-native';
+import { toaster } from '../utils/toaster';
+
+export type MyLocation = Location;
+type LocationListener = (location: MyLocation) => void;
 
 export class ServiceLocation {
 
@@ -11,45 +18,49 @@ export class ServiceLocation {
     };
 
     private _configured = false;
-    private _permissionUnsubscribe!: Subscription;
+    private _locationCallback: LocationListener | null = null;
     private _locationUpdateUnsubscribe!: Subscription;
 
     constructor(private api: API) {
         //
     }
 
-    private _onPermissionChange = (status: LocationPermissionStatus) => {
-        if (
-            status === 'authorizedFine'
-            || status === 'authorizedCoarse'
-            || status === 'authorizedAlways'
-        ) {
-            this._locationUpdateUnsubscribe = RNLocation.subscribeToLocationUpdates(this._onLocationUpdate);
+    private _onLocationUpdate = (locations?: Location[]) => {
+        console.log(`${locations}`);
+        // get the latest location
+        const location = locations?.reduce((prev, curr) => {
+            return prev.timestamp > curr.timestamp ? prev : curr;
+        });
+        if (location) {
+            Parse.Cloud.run("trip-update-location", {
+                latitude: location.latitude,
+                longitude: location.longitude
+            }).then(res => {
+                console.log(res);
+            })
+                .catch(err => {
+                    toaster.show({ message: err.message, gravity: 'CENTER' });
+                });
+            this._locationCallback?.(location);
         }
     }
-    private _onLocationUpdate = (locations: Location[]) => {
-        //
-    }
-
-    public configure = async () => {
+    private _requestEnableGPS = async () => {
         try {
-            await RNLocation.configure({
-                distanceFilter: 10.0,// in meter
-                desiredAccuracy: {
-                    android: 'balancedPowerAccuracy',
-                    ios: 'best'
-                },
-                interval: 8000,// 8 seconds
+            const res = await RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({
+                fastInterval: 8000 * 2,
+                interval: 8000
             });
-            this._configured = true;
-            this._permissionUnsubscribe = RNLocation.subscribeToPermissionUpdates(this._onPermissionChange);
+            return true;
         } catch (err) {
-            console.error(`location configuration error: ${err.message}`);
-            this._configured = false;
+            console.error(err.message);
+            snackbar.show({
+                message: err.message,
+                type: 'error'
+            });
+            return false;
         }
     }
-
-    public requestForPermission = async () => {
+    private _requestForPermission = async () => {
         try {
             if (this._configured) {
                 // check if location permission is granted
@@ -78,12 +89,43 @@ export class ServiceLocation {
         }
     }
 
+    public configure = async (onLocation: LocationListener) => {
+        if (!this._configured) {
+            try {
+                this._locationCallback = onLocation;
+                await RNLocation.configure({
+                    distanceFilter: 10.0,// in meter
+                    desiredAccuracy: {
+                        android: 'balancedPowerAccuracy',
+                        ios: 'best'
+                    },
+                    interval: 8000,// 8 seconds
+                });
+                this._configured = true;
+            } catch (err) {
+                console.error(`location configuration error: ${err.message}`);
+                this._configured = false;
+                this._locationCallback = null;
+            }
+        }
+        return this._configured;
+    }
+
+    public start = async () => {
+        const granted = await this._requestForPermission();
+        if (granted) {
+            const enabled = await this._requestEnableGPS();
+            if (enabled) {
+                this._locationUpdateUnsubscribe = RNLocation.subscribeToLocationUpdates(this._onLocationUpdate);
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
     // cancel any subscription.
     public doCleanup = () => {
-        if (this._permissionUnsubscribe)
-            this._permissionUnsubscribe();
-
-        if (this._locationUpdateUnsubscribe)
-            this._locationUpdateUnsubscribe();
+        this._locationUpdateUnsubscribe?.();
     }
 }

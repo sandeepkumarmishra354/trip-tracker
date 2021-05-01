@@ -1,9 +1,11 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { PNUnsubscribe, servicePubnub } from "../../service/service.pubnub";
+import { PNUnsubscribe } from "../../service/service.pubnub";
 import { IJoinedTrip, ITripCreateData, ServiceTrip, TripStatus } from "../../service/service.trip";
 import { PublisherChannel } from "../../utils/constants";
 import { toaster } from "../../utils/toaster";
 import { AppDataStore } from "../app.store";
+import Parse from 'parse/react-native';
+import { snackbar } from "../../utils/snackbar";
 
 interface ITripJoinLiveData {
     joined: number,
@@ -30,7 +32,10 @@ export class StoreTrip {
     private _gettingTrips = false;
     private _checkingJoinedTrip = true;
     private _joinedTrip: IJoinedTrip | null = null;
-    private _pnUnsubscribers: PNUnsubscribe[] = [];
+    private _unsubscribeJoined!: PNUnsubscribe | null;
+    private _unsubscribeStarted!: PNUnsubscribe | null;
+    private _unsubscribeFinished!: PNUnsubscribe | null;
+    private _unsubscribeCancelled!: PNUnsubscribe | null;
 
     constructor(private rootStore: AppDataStore, private serviceTrip: ServiceTrip) {
         makeAutoObservable(this);
@@ -46,11 +51,6 @@ export class StoreTrip {
     public get joinedTrip() { return this._joinedTrip; }
     public get checkingJoinedTrip() { return this._checkingJoinedTrip; }
     public get hasOngoingTrip() { return !this._checkingJoinedTrip && !!this._joinedTrip; }
-
-    private _addUnsubscriber = (un: PNUnsubscribe | null) => {
-        if (un)
-            this._pnUnsubscribers.push(un);
-    }
 
     private _onNewUserJoined = (data: ITripJoinLiveData) => {
         toaster.show({
@@ -69,28 +69,56 @@ export class StoreTrip {
         });
     }
     private _onTripStarted = (data: ITripStatusLiveData) => {
-        //
+        toaster.show({message: "trip started",gravity: 'CENTER'});
+        // now unsubscribe for these listeners
+        this._unsubscribeJoined?.();
+        this._unsubscribeStarted?.();
+        // update status
+        runInAction(() => {
+            if (this._joinedTrip) {
+                this._joinedTrip = {
+                    ...this._joinedTrip,
+                    status: data.newStatus
+                };
+            }
+        });
     }
     private _onTripFinished = (data: ITripStatusLiveData) => {
-        //
+        toaster.show({message: "trip finished",gravity: 'CENTER'});
+        this._unsubscribeAll();
+        runInAction(() => {
+            this._joinedTrip = null;
+        });
+        this.rootStore.noTripNow();
     }
     private _onTripCancelled = (data: ITripStatusLiveData) => {
-        //
+        toaster.show({message: "trip cancelled",gravity: 'CENTER'});
+        this._unsubscribeAll();
+        runInAction(() => {
+            this._joinedTrip = null;
+        });
+        this.rootStore.noTripNow();
     }
 
-    private _subscribeToChannels = (tripId: string) => {
-        const channelJoined = PublisherChannel.tripJoined(tripId);
-        const channelCancelled = PublisherChannel.tripCancelled(tripId);
-        const channelFinished = PublisherChannel.tripFinished(tripId);
-        const channelStarted = PublisherChannel.tripStarted(tripId);
-        const un1 = servicePubnub.subscribe(channelJoined, this._onNewUserJoined);
-        const un2 = servicePubnub.subscribe(channelCancelled, this._onTripCancelled);
-        const un3 = servicePubnub.subscribe(channelFinished, this._onTripFinished);
-        const un4 = servicePubnub.subscribe(channelStarted, this._onTripStarted);
-        this._addUnsubscriber(un1);
-        this._addUnsubscriber(un2);
-        this._addUnsubscriber(un3);
-        this._addUnsubscriber(un4);
+    private _subscribeToChannels = (result: IJoinedTrip) => {
+        const tripId = result.tripId;
+        if ([TripStatus.PLANNED, TripStatus.STARTED].includes(result.status)
+            && result.remaining > 0) {
+            const channelJoined = PublisherChannel.tripJoined(tripId);
+            this._unsubscribeJoined = this.rootStore.servicePubnub.subscribe(channelJoined,
+                this._onNewUserJoined);
+        }
+        if (!result.isHost) {
+            const channelCancelled = PublisherChannel.tripCancelled(tripId);
+            const channelFinished = PublisherChannel.tripFinished(tripId);
+            const channelStarted = PublisherChannel.tripStarted(tripId);
+            this._unsubscribeCancelled = this.rootStore.servicePubnub.subscribe(channelCancelled,
+                this._onTripCancelled);
+            this._unsubscribeFinished = this.rootStore.servicePubnub.subscribe(channelFinished,
+                this._onTripFinished);
+            this._unsubscribeStarted = this.rootStore.servicePubnub.subscribe(channelStarted,
+                this._onTripStarted);
+        }
     }
 
     public createTrip = async (data: ITripCreateData) => {
@@ -110,6 +138,8 @@ export class StoreTrip {
             this._checkingJoinedTrip = false;
             this._joinedTrip = result;
         });
+        if (result)
+            this._subscribeToChannels(result);
     }
 
     public checkForJoinedTrip = async () => {
@@ -122,19 +152,65 @@ export class StoreTrip {
         });
         // subscribe for trip listeners
         if (result)
-            this._subscribeToChannels(result.tripId);
+            this._subscribeToChannels(result);
     }
 
     public startTrip = async () => {
-        runInAction(() => { this._startingTrip = true });
+        try {
+            runInAction(() => { this._startingTrip = true });
+            const result = <ITripStatusLiveData>await Parse.Cloud.run("trip-start");
+            runInAction(() => {
+                this._startingTrip = false;
+                if (this._joinedTrip) {
+                    this._joinedTrip = {
+                        ...this._joinedTrip,
+                        status: result.newStatus,
+                    }
+                }
+            });
+        } catch (err) {
+            runInAction(() => { this._startingTrip = false });
+            snackbar.show({
+                message: err.message,
+                type: 'error'
+            });
+        }
     }
 
     public finishTrip = async () => {
-        runInAction(() => { this._finishingTrip = true });
+        try {
+            runInAction(() => { this._finishingTrip = true; });
+            const result = <ITripStatusLiveData>await Parse.Cloud.run("trip-finish");
+            this._unsubscribeAll();
+            runInAction(() => {
+                this._finishingTrip = false;
+                this._joinedTrip = null;
+            });
+        } catch(err) {
+            runInAction(() => { this._finishingTrip = false; });
+            snackbar.show({
+                message: err.message,
+                type: 'error'
+            });
+        }
     }
 
     public cancelTrip = async () => {
-        runInAction(() => { this._cancellingingTrip = true });
+        try {
+            runInAction(() => { this._cancellingingTrip = true });
+            const result = <ITripStatusLiveData>await Parse.Cloud.run("trip-cancel");
+            this._unsubscribeAll();
+            runInAction(() => {
+                this._cancellingingTrip = false;
+                this._joinedTrip = null;
+            });
+        } catch (err) {
+            runInAction(() => { this._cancellingingTrip = false; });
+            snackbar.show({
+                message: err.message,
+                type: 'error'
+            });
+        }
     }
 
     public updateCurrentLocation = async () => {
@@ -147,7 +223,14 @@ export class StoreTrip {
 
     // cancel any subscription.
     public doCleanup = () => {
-        this._pnUnsubscribers.forEach(un => un());
+        this._unsubscribeAll();
         this.serviceTrip.doCleanup();
+    }
+
+    private _unsubscribeAll = () => {
+        this._unsubscribeJoined?.();
+        this._unsubscribeStarted?.();
+        this._unsubscribeCancelled?.();
+        this._unsubscribeFinished?.();
     }
 }

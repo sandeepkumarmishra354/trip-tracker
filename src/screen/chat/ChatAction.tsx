@@ -60,7 +60,6 @@ const ChatAction = React.memo(() => {
 
 const styles = StyleSheet.create({
     actionContainer: {
-        position: 'absolute', bottom: 0,
         backgroundColor: '#fff', width: '100%',
         borderRadius: 0, elevation: 8,
         flexDirection: 'row', alignItems: 'center',

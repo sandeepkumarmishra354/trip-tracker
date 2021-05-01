@@ -1,17 +1,18 @@
+import { toaster } from "../utils/toaster";
 import { API } from "./api";
+import Parse from 'parse/react-native';
 
 export interface IMessage {
     id: string,
-    time: string,
-    text: string,
-    imageUrl: string,
+    tripId: string,
+    createdAt: string,
+    message: string,
     sender: {
-        id: string,
         name: string,
         photo: string,
-        isMe: boolean
+        email: string,
     },
-    tripId: string
+    isMe: boolean
 }
 
 export class ServiceMessage {
@@ -29,7 +30,16 @@ export class ServiceMessage {
     }
 
     public loadAll = async () => {
-        return null;
+        try {
+            const result = <IMessage[]> await Parse.Cloud.run("message-list");
+            return result;
+        } catch(err) {
+            toaster.show({
+                message: err.message,
+                gravity: 'CENTER'
+            });
+            return null;
+        }
     }
 
     // cancel any subscription.

@@ -14,7 +14,10 @@ export const HomeOngoingTrip = observer((props: Props) => {
     const storeTrip = useRootStore().storeTrip;
 
     if (storeTrip.joinedTrip?.status === TripStatus.PLANNED)
-        return <OngoingTripInfo trip={storeTrip.joinedTrip}/>
+        return <OngoingTripInfo trip={storeTrip.joinedTrip} />
 
-    return <OngoingTripMapView onFabPress={props.onFabPress}/>
+    if (storeTrip.joinedTrip?.status === TripStatus.STARTED)
+        return <OngoingTripMapView onFabPress={props.onFabPress} />
+
+    return null;
 });

@@ -6,7 +6,7 @@ export class StoreMessage {
 
     private _loadingMessage = false;
     private _sendingMessage = false;
-    private _messages: IMessage | null = null;
+    private _messages: IMessage[] | null = null;
 
     constructor(private rootStore: AppDataStore, private serviceMessage: ServiceMessage) {
         makeAutoObservable(this);
@@ -27,12 +27,14 @@ export class StoreMessage {
     }
 
     public loadAll = async () => {
-        runInAction(() => { this._loadingMessage = true; });
-        const result = await this.serviceMessage.loadAll();
-        runInAction(() => {
-            this._loadingMessage = true;
-            this._messages = result;
-        });
+        if (this._messages === null) {
+            runInAction(() => { this._loadingMessage = true; });
+            const result = await this.serviceMessage.loadAll();
+            runInAction(() => {
+                this._loadingMessage = false;
+                this._messages = result;
+            });
+        }
     }
 
     // cancel any subscription.

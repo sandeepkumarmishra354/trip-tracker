@@ -27,7 +27,7 @@ export type AppStackParams = {
     [AppScreens.PROFILE]: undefined,
     [AppScreens.PROFILE_EDIT]: undefined,
     [AppScreens.CREATE_TRIP]: undefined,
-    [AppScreens.GROUP_CHAT]: { title: string },
+    [AppScreens.GROUP_CHAT]: undefined,
 }
 export interface NavigationProps<S extends AppScreens> {
     navigation: StackNavigationProp<AppStackParams, S>,
