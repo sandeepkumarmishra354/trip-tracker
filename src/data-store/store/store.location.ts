@@ -10,6 +10,7 @@ export interface ILiveLocationData {
     tripId: string,
     latitude: number,
     longitude: number,
+    timestamp: number,
     user: {
         name: string,
         photo: string,
