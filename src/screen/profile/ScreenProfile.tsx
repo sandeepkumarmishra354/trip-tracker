@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import React, { useState } from 'react';
-import { ScrollView } from 'react-native-gesture-handler';
+import { View } from 'react-native';
 import { Appbar, Menu } from 'react-native-paper';
 import { Loading } from '../../common/Loading';
 import MyButton from '../../common/MyButton';
@@ -56,25 +56,27 @@ const ScreenProfile = (props: Props) => {
     const openScreen = (screen: AppScreens) => {
         navigation.navigate(screen);
     }
+    const openOngoing = () => {
+        navigation.navigate(AppScreens.TRIP_ONGOING);
+    }
 
     return (
         <ScreenContainer
             title="Profile"
-            showBack={navigation.goBack}
-            actions={storeProfile.profileData?.method === 'phone' ? [<ActionMenu key="1" openScreen={openScreen} />] : null}>
+            showBack={navigation.goBack}>
             {storeProfile.fetching
                 ? <Loading />
                 :
-                storeProfile.profileData && <ScrollView
-                    style={{ width: '100%' }}>
+                storeProfile.profileData && <View
+                    style={{ width: '100%',flex:1 }}>
                     <ProfileHeader
                         email={storeProfile.profileData.email}
                         photo={storeProfile.profileData.photo}
                         name={storeProfile.profileData.fullname} />
                     <MyDivider height={22} />
-                    <ProfileOption />
+                    <ProfileOption openOngoingTrip={openOngoing}/>
                     <MyButton
-                        style={{ width: '70%', alignSelf: 'center', marginVertical: 28 }}
+                        style={{ width: '70%', alignSelf: 'center', marginVertical: 28,position:'absolute',bottom:16 }}
                         borderRadius={2}
                         label="logout"
                         icon="log-out-outline"
@@ -82,7 +84,7 @@ const ScreenProfile = (props: Props) => {
                         loading={storeProfile.loggingOut}
                         disabled={storeProfile.loggingOut}
                         onPress={storeProfile.logout} />
-                </ScrollView>
+                </View>
             }
         </ScreenContainer>
     );

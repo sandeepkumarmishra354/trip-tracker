@@ -1,24 +1,11 @@
-import React, { useState } from 'react';
-import { List, Switch, withTheme } from 'react-native-paper';
-import { snackbar } from '../../utils/snackbar';
+import React from 'react';
+import { List } from 'react-native-paper';
 
 interface Props {
-    theme: ReactNativePaper.Theme
+    openOngoingTrip(): void
 }
 
 const ProfileOption = React.memo((props: Props) => {
-
-    const { accent } = props.theme.colors;
-    const [notificationStatus, setNotStatus] = useState(true);
-
-    const onPress = () => {
-        snackbar.show({
-            message:"option pressed"
-        });
-    }
-    const changeNotStatus = () => {
-        setNotStatus(!notificationStatus);
-    }
 
     return (
         <List.Section>
@@ -26,8 +13,8 @@ const ProfileOption = React.memo((props: Props) => {
                 title="Ongoing Trip"
                 description="view details of currently joined trip."
                 left={props => <List.Icon {...props} icon="car-sport-outline" />}
-                onPress={onPress} />
-            <List.Item
+                onPress={props.openOngoingTrip} />
+            {/*<List.Item
                 title="Previous Trip"
                 description="view all your previous trips."
                 left={props => <List.Icon {...props} icon="trail-sign-outline" />}
@@ -50,9 +37,9 @@ const ProfileOption = React.memo((props: Props) => {
             <List.Item
                 title="Term's and condition"
                 left={props => <List.Icon {...props} icon="reader-outline" />}
-                onPress={onPress} />
+                onPress={onPress} />*/}
         </List.Section>
     );
 });
 
-export default withTheme(ProfileOption);
+export default ProfileOption;

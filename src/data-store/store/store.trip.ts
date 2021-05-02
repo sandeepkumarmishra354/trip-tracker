@@ -20,6 +20,21 @@ interface ITripStatusLiveData {
     lastStatus: TripStatus,
     newStatus: TripStatus
 }
+export interface IOngoingTripData {
+    id: string,
+    tripId: string,
+    destination: string,
+    description: string,
+    name: string,
+    status: TripStatus,
+    maxMember: number,
+    createdAt: string,
+    isHost: boolean,
+    members: {
+        name: string,
+        photo: string,
+    }[]
+}
 
 export class StoreTrip {
 
@@ -69,7 +84,7 @@ export class StoreTrip {
         });
     }
     private _onTripStarted = (data: ITripStatusLiveData) => {
-        toaster.show({message: "trip started",gravity: 'CENTER'});
+        toaster.show({ message: "trip started", gravity: 'CENTER' });
         // now unsubscribe for these listeners
         this._unsubscribeJoined?.();
         this._unsubscribeStarted?.();
@@ -84,7 +99,7 @@ export class StoreTrip {
         });
     }
     private _onTripFinished = (data: ITripStatusLiveData) => {
-        toaster.show({message: "trip finished",gravity: 'CENTER'});
+        toaster.show({ message: "trip finished", gravity: 'CENTER' });
         this._unsubscribeAll();
         runInAction(() => {
             this._joinedTrip = null;
@@ -92,7 +107,7 @@ export class StoreTrip {
         this.rootStore.noTripNow();
     }
     private _onTripCancelled = (data: ITripStatusLiveData) => {
-        toaster.show({message: "trip cancelled",gravity: 'CENTER'});
+        toaster.show({ message: "trip cancelled", gravity: 'CENTER' });
         this._unsubscribeAll();
         runInAction(() => {
             this._joinedTrip = null;
@@ -168,12 +183,14 @@ export class StoreTrip {
                     }
                 }
             });
+            return true;
         } catch (err) {
             runInAction(() => { this._startingTrip = false });
             snackbar.show({
                 message: err.message,
                 type: 'error'
             });
+            return false;
         }
     }
 
@@ -186,12 +203,14 @@ export class StoreTrip {
                 this._finishingTrip = false;
                 this._joinedTrip = null;
             });
-        } catch(err) {
+            return true;
+        } catch (err) {
             runInAction(() => { this._finishingTrip = false; });
             snackbar.show({
                 message: err.message,
                 type: 'error'
             });
+            return false;
         }
     }
 
@@ -204,12 +223,14 @@ export class StoreTrip {
                 this._cancellingingTrip = false;
                 this._joinedTrip = null;
             });
+            return true;
         } catch (err) {
             runInAction(() => { this._cancellingingTrip = false; });
             snackbar.show({
                 message: err.message,
                 type: 'error'
             });
+            return false;
         }
     }
 

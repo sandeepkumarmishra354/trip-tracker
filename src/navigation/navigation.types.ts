@@ -20,7 +20,8 @@ export enum AppScreens {
     GROUP_CHAT = 'group-chat',
     PROFILE = 'profile',
     PROFILE_EDIT = 'profile-edit',
-    CREATE_TRIP = "create-trip"
+    CREATE_TRIP = "create-trip",
+    TRIP_ONGOING = "trip-ongoing",
 }
 export type AppStackParams = {
     [AppScreens.HOME]: undefined,
@@ -28,6 +29,7 @@ export type AppStackParams = {
     [AppScreens.PROFILE_EDIT]: undefined,
     [AppScreens.CREATE_TRIP]: undefined,
     [AppScreens.GROUP_CHAT]: undefined,
+    [AppScreens.TRIP_ONGOING]: undefined,
 }
 export interface NavigationProps<S extends AppScreens> {
     navigation: StackNavigationProp<AppStackParams, S>,

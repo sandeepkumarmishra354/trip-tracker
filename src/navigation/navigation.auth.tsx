@@ -1,5 +1,4 @@
 import React from 'react';
-//import { createStackNavigator } from '@react-navigation/stack';
 import ScreenLogin from '../screen/auth/ScreenLogin';
 import { AppAuthScreens, AppAuthStackParams } from './navigation.types';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';

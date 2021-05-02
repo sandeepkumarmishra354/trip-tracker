@@ -21,12 +21,12 @@ const ChatAction = observer(() => {
             setMessage("");
         }
     }
-    function onImageClick() {
+    /*function onImageClick() {
         actionSheet.current?.show();
     }
     function onImageOption() {
         actionSheet.current?.hide();
-    }
+    }*/
     function onMessageChange(text: string) {
         if (message !== text) {
             setMessage(text);
@@ -36,10 +36,10 @@ const ChatAction = observer(() => {
     return (
         <>
             <View style={styles.actionContainer}>
-                <IconButton
+                {/*<IconButton
                     icon="image-outline"
                     onPress={onImageClick}
-                    color="#758283" />
+                    color="#758283" />*/}
                 <TextInput
                     style={styles.input}
                     underlineColorAndroid="transparent"
@@ -51,7 +51,7 @@ const ChatAction = observer(() => {
                     onPress={onSendClick}
                     color="#1B98F5" />
             </View>
-            <MyActionSheet ref={actionSheet}>
+            {/*<MyActionSheet ref={actionSheet}>
                 <List.Item
                     title="Open Gallery"
                     onPress={onImageOption}
@@ -61,7 +61,7 @@ const ChatAction = observer(() => {
                     title="Open Camera"
                     onPress={onImageOption}
                     left={props => <List.Icon {...props} icon="camera-outline" />} />
-            </MyActionSheet>
+            </MyActionSheet>*/}
         </>
     );
 });
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     input: {
         height: 40, flex: 1,
         borderRadius: 16, backgroundColor: '#ecf3f9',
-        paddingLeft: 8
+        paddingLeft: 8,marginLeft:5
     }
 });
 
