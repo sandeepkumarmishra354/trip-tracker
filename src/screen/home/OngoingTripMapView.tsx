@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { Avatar, FAB } from 'react-native-paper';
+import { Avatar, Badge, FAB } from 'react-native-paper';
 import { useRootStore } from '../../common/RootStoreProvider';
 import { ILiveLocationData } from '../../data-store/store/store.location';
 import MapView, { Marker } from 'react-native-maps';
@@ -85,6 +85,25 @@ const MyLocationMarker = React.memo((props: MyLocationProps) => {
     );
 });
 
+interface IFabProps {
+    onFabPress(): void
+}
+
+const FabMessage = observer((props: IFabProps) => {
+
+    const storeMessage = useRootStore().storeMessage;
+
+    return (
+        <FAB
+            style={{ position: 'absolute', bottom: 16, right: 16 }}
+            icon="chatbubble-outline"
+            small={false}
+            label={storeMessage.unreadMessage}
+            onPress={props.onFabPress}>
+        </FAB>
+    );
+});
+
 interface Props {
     onFabPress(): void
 }
@@ -130,11 +149,7 @@ export const OngoingTripMapView = observer((props: Props) => {
                     &&
                     <UserLocationMarker data={membersLocation} />}
             </MapView>
-            <FAB
-                style={{ position: 'absolute', bottom: 16, right: 16 }}
-                icon="chatbubble-outline"
-                small={false}
-                onPress={props.onFabPress} />
+            <FabMessage onFabPress={props.onFabPress} />
         </View>
     );
 });

@@ -9,4 +9,5 @@ export const PublisherChannel = {
     tripFinished: (tripId: string) => `${tripId}-trip_finished`,
     tripCancelled: (tripId: string) => `${tripId}-trip_cancelled`,
     tripLocationUpdate: (tripId: string) => `${tripId}-location_update`,
+    newMessage: (tripId: string) => `${tripId}-new_message`,
 }

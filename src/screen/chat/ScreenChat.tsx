@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ScreenContainer from '../../common/ScreenContainer';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Subheading } from 'react-native-paper';
@@ -26,28 +26,43 @@ interface Props extends NavigationProps<AppScreens.GROUP_CHAT> {
 }
 
 const ScreenGroupChat = observer((props: Props) => {
+
     const storeMessage = useRootStore().storeMessage;
     const navigation = props.navigation;
+
+
+    useEffect(() => {
+        storeMessage.resetUnreadMessages();
+        storeMessage.loadAll()
+            .then(() => { })
+            .catch(() => { });
+    }, []);
+
+    if (storeMessage.loadingMessage)
+        return <Loading />;
+    if (storeMessage.messages === null || storeMessage.messages.length === 0)
+        return (
+            <ScreenContainer
+                title="Group chat"
+                showBack={navigation.goBack}>
+                <View
+                    style={styles.container}>
+                    <NoMessageView />
+                    <ChatAction />
+                </View>
+            </ScreenContainer>
+        );
+
     return (
         <ScreenContainer
             title="Group chat"
             showBack={navigation.goBack}>
             <View style={styles.container}>
                 <View
-                    style={{ width: '100%', flexGrow: 1 }}>
-                    {
-                        storeMessage.loadingMessage
-                            ?
-                            <Loading />
-                            :
-                            (storeMessage.messages === null || storeMessage.messages.length === 0)
-                                ?
-                                <NoMessageView />
-                                :
-                                <MessageList messages={storeMessage.messages} />
-                    }
+                    style={[styles.messageList, { marginTop: 56 }]}>
+                    <MessageList messages={storeMessage.messages} />
                 </View>
-                {!storeMessage.loadingMessage && <ChatAction />}
+                <ChatAction />
             </View>
         </ScreenContainer>
     );
@@ -57,16 +72,21 @@ const styles = StyleSheet.create({
     container: {
         width: '100%', flex: 1,
         flexDirection: 'column',
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-end',
     },
     emptyContainer: {
-        flexGrow: 1, justifyContent: 'center',
+        flexGrow: 1,
+        justifyContent: 'center',
         alignItems: 'center'
     },
     emptyMessage: {
-        marginHorizontal: 22, textAlign: 'center',
+        marginHorizontal: 22,
+        textAlign: 'center',
         marginTop: 18
     },
+    messageList: {
+        width: '100%',
+    }
 });
 
 export default ScreenGroupChat;

@@ -21,19 +21,38 @@ export class ServiceMessage {
         //
     }
 
-    public sendText = async (message: string) => {
-        //
-    }
-
-    public sendImage = async (fileUrl: string) => {
-        //
-    }
-
-    public loadAll = async () => {
+    public sendText = async (tripId: string, message: string) => {
         try {
-            const result = <IMessage[]> await Parse.Cloud.run("message-list");
+            const result = <IMessage> await Parse.Cloud.run("message-send", { tripId, message });
             return result;
-        } catch(err) {
+        } catch (err) {
+            toaster.show({
+                message: err.message,
+                gravity: 'CENTER'
+            });
+            console.error(err);
+            return null;
+        }
+    }
+
+    public sendImage = async (tripId: string, fileUrl: string) => {
+        try {
+            return null;
+        } catch (err) {
+            toaster.show({
+                message: err.message,
+                gravity: 'CENTER'
+            });
+            console.error(err);
+            return null;
+        }
+    }
+
+    public loadAll = async (tripId: string) => {
+        try {
+            const result = <IMessage[]>await Parse.Cloud.run("message-list", { tripId });
+            return result;
+        } catch (err) {
             toaster.show({
                 message: err.message,
                 gravity: 'CENTER'

@@ -1,17 +1,25 @@
+import { observer } from 'mobx-react-lite';
 import React, { useRef, useState } from 'react'
 import { StyleSheet, TextInput, View } from 'react-native';
 import { IconButton, List } from 'react-native-paper';
 import MyActionSheet from '../../common/MyActionSheet';
 import MyDivider from '../../common/MyDivider';
+import { useRootStore } from '../../common/RootStoreProvider';
 
-const ChatAction = React.memo(() => {
+const ChatAction = observer(() => {
 
+    const storeMessage = useRootStore().storeMessage;
     const actionSheet = useRef<MyActionSheet>(null);
     const [message, setMessage] = useState("");
 
     function onSendClick() {
-        if (message)
+        const trimmedMessage = message.trim();
+        if (trimmedMessage) {
+            storeMessage.sendText(trimmedMessage)
+                .then(() => { })
+                .catch(() => { });
             setMessage("");
+        }
     }
     function onImageClick() {
         actionSheet.current?.show();
@@ -48,7 +56,7 @@ const ChatAction = React.memo(() => {
                     title="Open Gallery"
                     onPress={onImageOption}
                     left={props => <List.Icon {...props} icon="images-outline" />} />
-                <MyDivider/>
+                <MyDivider />
                 <List.Item
                     title="Open Camera"
                     onPress={onImageOption}
