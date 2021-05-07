@@ -50,11 +50,14 @@ const TripDetails = observer((props: ITripProps) => {
                     <Subheading>
                         Trip Description: {trip.description}
                     </Subheading>
-                    <Subheading>
+                    <Subheading style={{color:'green'}} selectable>
                         Trip Id: {trip.tripId}
                     </Subheading>
                     <Subheading>
                         Created At: {trip.createdAt}
+                    </Subheading>
+                    <Subheading>
+                        End At: {trip.endAt}
                     </Subheading>
                     <Subheading>
                         Max Member: {trip.maxMember}

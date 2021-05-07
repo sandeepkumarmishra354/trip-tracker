@@ -13,6 +13,7 @@ export interface ITripCreateData {
     name: string,
     destination: string,
     maxMember: number,
+    endAt: Date,
     description?: string
 }
 export interface ITripCreated {
@@ -33,7 +34,8 @@ export interface IJoinedTrip {
     tripHostEmail: string,
     joined: number,
     remaining: number,
-    isHost: boolean
+    isHost: boolean,
+    endAt: string,
 }
 
 export class ServiceTrip {

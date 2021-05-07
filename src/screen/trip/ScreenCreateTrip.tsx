@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import ScreenContainer from '../../common/ScreenContainer';
 import { AppScreens, NavigationProps } from '../../navigation/navigation.types';
@@ -9,6 +9,7 @@ import MyButton from '../../common/MyButton';
 import { useRootStore } from '../../common/RootStoreProvider';
 import { snackbar } from '../../utils/snackbar';
 import { DialogTripCreated } from './DialogTripCreated';
+import { MyDatePicker } from '../../common/MyDatePicker';
 
 interface Props extends NavigationProps<AppScreens.CREATE_TRIP> {
     //
@@ -18,25 +19,28 @@ const ScreenCreateTrip = (props: Props) => {
 
     const storeTrip = useRootStore().storeTrip;
     const navigation = props.navigation;
+    const selectedDate = useRef<Date>();
     const [tripName, setTripName] = useState("");
     const [destination, setDestination] = useState("");
     const [members, setMembers] = useState("");
     const [description, setDescription] = useState("");
+    const [showDate, setShowDate] = useState(false);
     const [createdData, setCreatedData] = useState({ success: false, tripId: "" });
 
     const onCreatePress = async () => {
-        if (tripName && destination && members) {
+        if (tripName && destination && members && selectedDate.current) {
             const result = await storeTrip.createTrip({
                 name: tripName,
                 destination, description,
-                maxMember: Number(members)
+                maxMember: Number(members),
+                endAt: selectedDate.current
             });
             if (result) {
                 setCreatedData({ success: true, tripId: result.tripId });
             }
         } else {
             snackbar.show({
-                message: "please fill all details...",
+                message: "please fill/select all details...",
                 type: 'error'
             });
         }
@@ -48,6 +52,16 @@ const ScreenCreateTrip = (props: Props) => {
             .then(() => { })
             .catch(() => { });
         navigation.goBack();
+    }
+    const _onDateTouch = () => {
+        setShowDate(true);
+    }
+    const _onDateDismiss = () => {
+        setShowDate(false);
+    }
+    const _onDateChange = (newDate: Date) => {
+        selectedDate.current = newDate;
+        setShowDate(false);
     }
 
     return (
@@ -85,6 +99,13 @@ const ScreenCreateTrip = (props: Props) => {
                         value={members}
                         onChangeText={setMembers}
                         disabled={storeTrip.creatingTrip} />
+                    <MyDatePicker
+                        style={{ marginBottom: 16 }}
+                        show={showDate}
+                        onTouch={_onDateTouch}
+                        onDismiss={_onDateDismiss}
+                        onChange={_onDateChange}
+                        minDate={new Date()} />
                     <MyTextInput
                         style={styles.input}
                         label="Description"

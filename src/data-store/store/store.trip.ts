@@ -29,6 +29,7 @@ export interface IOngoingTripData {
     status: TripStatus,
     maxMember: number,
     createdAt: string,
+    endAt: string,
     isHost: boolean,
     members: {
         name: string,
