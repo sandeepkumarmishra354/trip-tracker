@@ -9,7 +9,8 @@
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "cd android && ./gradlew clean && cd ..",
-    "build-release": "cd android && ./gradlew clean && ./gradlew assembleRelease && cd .."
+    "build-release-apk": "cd android && ./gradlew clean && ./gradlew assembleRelease && cd ..",
+    "build-release-aab": "cd android && ./gradlew clean && ./gradlew bundleRelease && cd .."
   },
   "dependencies": {
     "@react-native-clipboard/clipboard": "^1.7.0",
